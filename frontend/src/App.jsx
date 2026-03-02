@@ -4,6 +4,10 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './context/ThemeContext';
 import Login from './pages/Login';
 import DashboardLayout from './components/DashboardLayout';
+import PatientRegistration from './pages/receptionist/PatientRegistration';
+import TokenGeneration from './pages/receptionist/TokenGeneration';
+import DoctorQueue from './pages/doctor/DoctorQueue';
+import LiveQueue from './pages/public/LiveQueue';
 
 // ProtectedRoute MUST be inside AuthProvider to access context
 const ProtectedRoute = ({ children, role }) => {
@@ -52,8 +56,8 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             >
-                <Route index element={<div className="text-2xl font-bold text-white">Doctor Dashboard Overview</div>} />
-                <Route path="queue" element={<div className="text-white">My Patient Queue</div>} />
+                <Route index element={<div className="text-2xl font-bold text-slate-800 dark:text-white">Doctor Dashboard Overview</div>} />
+                <Route path="queue" element={<DoctorQueue />} />
             </Route>
 
             <Route
@@ -64,9 +68,12 @@ function AppRoutes() {
                     </ProtectedRoute>
                 }
             >
-                <Route index element={<div className="text-2xl font-bold text-white">Receptionist Dashboard Overview</div>} />
-                <Route path="registration" element={<div className="text-white">Patient Registration</div>} />
+                <Route index element={<div className="text-2xl font-bold text-slate-800 dark:text-white">Receptionist Dashboard Overview</div>} />
+                <Route path="registration" element={<PatientRegistration />} />
+                <Route path="queue" element={<TokenGeneration />} />
             </Route>
+
+            <Route path="/live-queue" element={<LiveQueue />} />
 
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
