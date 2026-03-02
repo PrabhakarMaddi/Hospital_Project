@@ -3,8 +3,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const connectDB = require('./config/db');
 
 dotenv.config();
+connectDB();
 
 const app = express();
 const httpServer = createServer(app);
@@ -16,6 +18,9 @@ const io = new Server(httpServer, {
 
 app.use(cors());
 app.use(express.json());
+
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Hospital API is running' });
