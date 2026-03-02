@@ -24,8 +24,8 @@ const SidebarLink = ({ to, icon: Icon, label, active, onClick }) => (
         to={to}
         onClick={onClick}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm ${active
-                ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-500/20'
-                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-slate-200'
+            ? 'bg-blue-50 dark:bg-blue-600/10 text-blue-600 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-500/20'
+            : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
     >
         <Icon className="w-5 h-5 flex-shrink-0" />
@@ -122,7 +122,7 @@ const DashboardLayout = ({ role }) => {
     );
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 flex transition-colors duration-300">
+        <div className="min-h-screen bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 flex transition-colors duration-300">
             {/* ─── Desktop Sidebar ────────────────────────── */}
             <aside className="hidden lg:flex w-60 xl:w-64 border-r border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900/50 flex-col sticky top-0 h-screen flex-shrink-0 shadow-sm">
                 <SidebarContent />
@@ -135,8 +135,9 @@ const DashboardLayout = ({ role }) => {
 
             {/* Mobile sidebar drawer */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/5 flex flex-col transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
+                className={`fixed top-0 left-0 z-40 w-72 h-screen transition-transform duration-300 ease-in-out flex flex-col lg:hidden
+                bg-white dark:bg-[#1e293b] border-r border-slate-200 dark:border-white/10
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
             >
                 <button className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" onClick={closeSidebar}>
                     <X className="w-5 h-5" />

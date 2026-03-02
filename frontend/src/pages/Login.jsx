@@ -32,10 +32,10 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen w-full bg-slate-50 dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
+        <div className="min-h-screen w-full bg-white dark:bg-[#0f172a] text-slate-800 dark:text-slate-200 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
             {/* Background blobs */}
-            <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] bg-blue-200/60 dark:bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-indigo-200/60 dark:bg-emerald-600/20 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] bg-blue-200/60 dark:bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] bg-emerald-100/40 dark:bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none" />
 
             {/* Theme toggle */}
             <button

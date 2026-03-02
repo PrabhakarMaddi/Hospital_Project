@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import socket from '../../services/socket';
-import { Monitor, Clock, Play, AlertTriangle, Activity, Loader2, Calendar } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { Monitor, Clock, Play, AlertCircle, Activity, Loader2, Calendar } from 'lucide-react';
 
 const LiveQueue = () => {
+    const { isDark } = useTheme();
     const [tokens, setTokens] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, waiting: 0, calling: 0, completed: 0 });
@@ -25,14 +27,8 @@ const LiveQueue = () => {
 
     useEffect(() => {
         fetchData();
-
-        socket.on('token:updated', () => {
-            fetchData();
-        });
-
-        // Periodically refresh just in case
+        socket.on('token:updated', fetchData);
         const interval = setInterval(fetchData, 30000);
-
         return () => {
             socket.off('token:updated');
             clearInterval(interval);
@@ -40,149 +36,207 @@ const LiveQueue = () => {
     }, []);
 
     const callingTokens = tokens.filter(t => t.status === 'Calling');
-    const waitingTokens = tokens.filter(t => t.status === 'Waiting').slice(0, 8); // Show only top 8 next
+    const waitingTokens = tokens.filter(t => t.status === 'Waiting');
 
     if (loading) return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+        <div className={`min-h-screen ${isDark ? 'bg-[#0f172a] text-white' : 'bg-white text-slate-900'} flex items-center justify-center transition-colors duration-300`}>
+            <div className="flex flex-col items-center gap-4">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                <p className="text-sm font-medium animate-pulse text-slate-500">Connecting to Queue Engine...</p>
+            </div>
         </div>
     );
 
     return (
-        <div className="min-h-screen bg-[#020617] text-white p-6 md:p-10 font-sans selection:bg-blue-500/30">
-            {/* Header */}
-            <header className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-white/5 pb-8">
-                <div className="flex items-center gap-5">
-                    <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-600/20">
-                        <Monitor className="w-9 h-9 text-white" />
+        <div className={`min-h-screen transition-colors duration-500 ${isDark ? 'bg-[#0f172a] text-slate-200' : 'bg-white text-slate-800'} relative overflow-hidden flex flex-col`}>
+            {/* Background Blobs for Uniformity with Login Page */}
+            <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-blue-100/40 dark:bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-emerald-50/40 dark:bg-emerald-600/5 rounded-full blur-[100px] pointer-events-none" />
+
+            {/* Header - Styled like Dashboard Header */}
+            <header className={`sticky top-0 z-40 h-20 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-[#1e293b]/80 backdrop-blur-md flex items-center px-8 transition-all`}>
+                <div className="max-w-[1600px] w-full mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="w-11 h-11 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+                            <Monitor className="text-white w-6 h-6" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white leading-tight">OPD Live Queue</h1>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Real-time Feed Active</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">Live OPD Queue</h1>
-                        <p className="text-slate-500 font-bold tracking-widest text-xs flex items-center gap-2 mt-1">
-                            <Activity className="w-3 h-3 text-emerald-500 animate-pulse" />
-                            REAL-TIME SYSTEM STATUS
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-8 bg-white/5 p-4 rounded-3xl border border-white/10 backdrop-blur-xl">
-                    <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Current Date</p>
-                        <p className="text-lg font-black flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-blue-400" />
-                            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}
-                        </p>
-                    </div>
-                    <div className="w-px h-10 bg-white/10"></div>
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Current Time</p>
-                        <p className="text-lg font-black tabular-nums">
-                            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+
+                    <div className="hidden md:flex items-center gap-8">
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-0.5">Current Date</span>
+                            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                <Calendar className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-bold">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' })}</span>
+                            </div>
+                        </div>
+                        <div className="w-px h-10 bg-slate-200 dark:bg-white/10" />
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-0.5">System Time</span>
+                            <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                                <Clock className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-bold tabular-nums">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <main className="max-w-[1600px] mx-auto grid grid-cols-1 xl:grid-cols-4 gap-10">
-                {/* Main Queue Column */}
-                <div className="xl:col-span-3 space-y-12">
-                    {/* Currently Calling Section */}
-                    <section>
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
-                            <h2 className="text-xl font-black uppercase tracking-[0.2em] text-emerald-500">Currently Calling</h2>
-                        </div>
+            <main className="flex-1 max-w-[1600px] w-full mx-auto p-8 lg:p-12 z-10">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {callingTokens.length > 0 ? callingTokens.map(token => (
-                                <div key={token._id} className="bg-gradient-to-br from-emerald-600/20 to-emerald-900/10 border-2 border-emerald-500/50 rounded-[2.5rem] p-10 flex flex-col justify-between relative overflow-hidden group shadow-2xl shadow-emerald-500/5">
-                                    <div className="flex justify-between items-start mb-10">
-                                        <div className="bg-emerald-500 text-slate-900 text-xs font-black px-4 py-1.5 rounded-full flex items-center gap-2 uppercase tracking-tighter">
-                                            <Play className="w-3 h-3 fill-current" />
-                                            Active Token
+                    {/* LEFT AREA: MAIN QUEUE LISTS */}
+                    <div className="xl:col-span-8 space-y-12">
+
+                        {/* CURRENTLY CALLING */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600">
+                                    <Activity className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-lg font-bold tracking-tight text-slate-800 dark:text-white uppercase transition-colors">Consultations In Progress</h2>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {callingTokens.length > 0 ? callingTokens.map(token => (
+                                    <div key={token._id} className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl p-8 sm:p-10 shadow-xl shadow-slate-200/40 dark:shadow-none hover:shadow-2xl transition-all duration-300 flex flex-col justify-between group overflow-hidden relative">
+                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                                            <Play className="w-24 h-24 rotate-45" />
                                         </div>
-                                        {token.priority === 'Emergency' && (
-                                            <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-full animate-pulse uppercase tracking-widest">
-                                                Emergency
+                                        <div className="relative z-10">
+                                            <div className="flex justify-between items-start mb-10">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-500/20">Active Now</span>
+                                                    <h3 className="text-2xl font-bold text-slate-800 dark:text-white mt-4">{token.patient.name}</h3>
+                                                    <p className="text-sm text-slate-400 font-medium">{token.department}</p>
+                                                </div>
+                                                {token.priority === 'Emergency' && (
+                                                    <span className="bg-red-50 dark:bg-red-500/10 text-red-600 text-[10px] font-black px-3 py-1 rounded-full border border-red-100 dark:border-red-500/20 uppercase animate-pulse">Emergency</span>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex items-baseline gap-4">
-                                            <span className="text-slate-500 font-bold text-2xl">TOKEN</span>
-                                            <h3 className="text-8xl md:text-9xl font-black tracking-tighter text-white tabular-nums">#{token.tokenNumber}</h3>
-                                        </div>
-                                        <div>
-                                            <p className="text-emerald-400 font-bold text-lg">{token.patient.name}</p>
-                                            <p className="text-slate-500 font-medium uppercase tracking-widest text-xs mt-1">Department: <span className="text-white">{token.department}</span></p>
+                                            <div className="flex items-end gap-3">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1 leading-none">Token</span>
+                                                    <span className="text-7xl font-bold tracking-tighter tabular-nums text-blue-600 leading-none">{token.tokenNumber}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )) : (
-                                <div className="md:col-span-2 bg-white/5 border border-dashed border-white/20 rounded-[2.5rem] p-24 flex flex-col items-center justify-center text-center opacity-60">
-                                    <Clock className="w-16 h-16 text-slate-600 mb-6" />
-                                    <h3 className="text-2xl font-black text-slate-400 uppercase tracking-widest">Waiting for next patient...</h3>
-                                </div>
-                            )}
-                        </div>
-                    </section>
+                                )) : (
+                                    <div className="md:col-span-2 py-24 bg-white/50 dark:bg-white/5 border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl flex flex-col items-center justify-center opacity-50 backdrop-blur-sm">
+                                        <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center mb-4">
+                                            <Clock className="w-8 h-8 text-slate-300 dark:text-slate-700" />
+                                        </div>
+                                        <p className="text-lg font-bold text-slate-400 uppercase tracking-widest">Waiting for next patient</p>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
 
-                    {/* Next in Line Section */}
-                    <section>
-                        <div className="flex items-center gap-4 mb-6">
-                            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-                            <h2 className="text-xl font-black uppercase tracking-[0.2em] text-blue-500">Waitlist</h2>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {waitingTokens.map(token => (
-                                <div key={token._id} className={`p-6 rounded-3xl border ${token.priority === 'Emergency'
-                                        ? 'bg-red-900/20 border-red-500/40'
-                                        : 'bg-white/5 border-white/10'
-                                    }`}>
-                                    <p className={`text-[10px] font-black uppercase tracking-widest mb-2 ${token.priority === 'Emergency' ? 'text-red-400' : 'text-slate-500'}`}>Token</p>
-                                    <h4 className="text-5xl font-black tabular-nums">#{token.tokenNumber}</h4>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-3 truncate">{token.department}</p>
+                        {/* UPCOMING WAITLIST */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg text-blue-600">
+                                    <Play className="w-5 h-5 fill-current" />
                                 </div>
-                            ))}
-                            {[...Array(Math.max(0, 4 - waitingTokens.length))].map((_, i) => (
-                                <div key={i} className="p-6 rounded-3xl border border-dashed border-white/5 opacity-20 flex items-center justify-center">
-                                    <span className="text-xs font-black text-slate-700 tracking-[0.3em]">EMPTY SLOT</span>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                </div>
-
-                {/* Vertical Sidebar Stats */}
-                <div className="space-y-8">
-                    <div className="bg-gradient-to-b from-blue-600 to-indigo-700 rounded-[2.5rem] p-10 shadow-3xl shadow-blue-500/10 h-full flex flex-col justify-between">
-                        <div>
-                            <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-10">Queue<br />Dashboard</h3>
-                            <div className="space-y-8">
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200/50 mb-2 font-mono">Total Served today</p>
-                                    <p className="text-6xl font-black tabular-nums">{stats.completed || 0}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200/50 mb-2 font-mono">Current Waitlist</p>
-                                    <p className="text-6xl font-black tabular-nums">{stats.waiting || 0}</p>
+                                <h2 className="text-lg font-bold tracking-tight text-slate-800 dark:text-white uppercase">Waitlist Sequence</h2>
+                            </div>
+                            <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-3xl overflow-hidden shadow-lg dark:shadow-none">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y divide-slate-100 dark:divide-white/5">
+                                    {waitingTokens.length > 0 ? waitingTokens.slice(0, 12).map((token, i) => (
+                                        <div key={token._id} className={`p-8 hover:bg-slate-50 dark:hover:bg-white/5 transition-all duration-300 relative group`}>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <span className={`text-[11px] font-bold uppercase tracking-widest opacity-30 ${token.priority === 'Emergency' ? 'text-red-500 opacity-100' : ''}`}>#{i + 1}</span>
+                                                {token.priority === 'Emergency' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                                            </div>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-[10px] font-bold text-slate-300 uppercase leading-none">Tk</span>
+                                                <span className="text-4xl font-bold tracking-tight tabular-nums text-slate-800 dark:text-white leading-none">{token.tokenNumber}</span>
+                                            </div>
+                                            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-widest mt-4 truncate">{token.department}</p>
+                                        </div>
+                                    )) : (
+                                        <div className="col-span-full py-20 flex flex-col items-center justify-center opacity-40">
+                                            <p className="text-sm font-bold uppercase tracking-widest text-slate-400">Queue represents empty sequence</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        </section>
+                    </div>
 
-                        <div className="mt-20 space-y-4">
-                            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4">
-                                <AlertTriangle className="w-6 h-6 text-yellow-300" />
-                                <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-blue-100">Staff Notice</p>
-                                    <p className="text-[11px] font-medium leading-tight">Emergency priority tokens are handled first.</p>
+                    {/* RIGHT AREA: METRICS & STATUS */}
+                    <div className="xl:col-span-4 space-y-8">
+                        {/* Metrics Card */}
+                        <section className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-[2.5rem] p-10 lg:p-12 shadow-2xl shadow-blue-500/5 backdrop-blur-sm">
+                            <div className="flex flex-col h-full">
+                                <div className="mb-10">
+                                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mb-6 text-blue-600">
+                                        <Activity className="w-6 h-6" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Queue Dashboard</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Monitoring OPD flow throughput for today's session.</p>
+                                </div>
+
+                                <div className="space-y-12">
+                                    {/* Stat 1 */}
+                                    <div className="group">
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">Total Served</p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-6xl font-bold tracking-tighter tabular-nums text-slate-800 dark:text-white">{stats.completed || 0}</span>
+                                            <span className="text-xs font-bold text-emerald-500">Patients</span>
+                                        </div>
+                                        <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-4 overflow-hidden">
+                                            <div className="h-full bg-blue-600 rounded-full w-[70%] shadow-[0_0_10px_rgba(37,99,235,0.4)]" />
+                                        </div>
+                                    </div>
+
+                                    {/* Stat 2 */}
+                                    <div className="group">
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">Currently Waiting</p>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-6xl font-bold tracking-tighter tabular-nums text-slate-800 dark:text-white">{stats.waiting || 0}</span>
+                                            <span className="text-xs font-bold text-blue-500">Waitlist</span>
+                                        </div>
+                                        <div className="w-full h-1 bg-slate-100 dark:bg-white/5 rounded-full mt-4 overflow-hidden">
+                                            <div className="h-full bg-emerald-500 rounded-full w-[45%] shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Notice Box */}
+                                <div className="mt-16 p-6 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 flex gap-4">
+                                    <div className="mt-1">
+                                        <AlertCircle className="w-5 h-5 text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-1">Queue Protocol</h4>
+                                        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
+                                            Emergency cases bypass standard waitlist sequence as per hospital flow directives.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-center opacity-50 px-2 leading-tight">
-                                <p className="text-[10px] font-bold tracking-widest uppercase">SHFMS Smart Hospital Flow Management</p>
-                                <p className="text-[9px] mt-1 font-mono">v1.0.4 • Stable Node 5013</p>
+                        </section>
+
+                        {/* Branding Footer */}
+                        <div className="text-center py-6">
+                            <div className="flex items-center justify-center gap-2 text-slate-400 dark:text-slate-600 text-xs">
+                                <div className="w-px h-3 bg-slate-200 dark:bg-white/10" />
+                                <span className="font-bold tracking-[0.2em] uppercase text-[9px]">Hospital Flow Engine</span>
+                                <div className="w-px h-3 bg-slate-200 dark:bg-white/10" />
                             </div>
+                            <p className="text-[9px] font-medium text-slate-400 mt-2 tracking-widest italic opacity-20">v1.0.4 • Smart-Health Core</p>
                         </div>
                     </div>
+
                 </div>
             </main>
         </div>
